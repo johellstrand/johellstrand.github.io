@@ -40570,12 +40570,11 @@ a.u-link.u-text-hover-grey-90:hover {
 }
 
 .u-header .u-menu-1 {
-  margin: 20px auto;
+  margin: 20px auto 20px 0;
 }
 
 .u-header .u-nav-1 {
   font-size: 1rem;
-  background-image: none;
 }
 
 .u-header .u-nav-2 {

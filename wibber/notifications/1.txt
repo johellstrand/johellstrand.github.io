@@ -1,2 +1,3 @@
-25-Nov-2023
-NordPools UMM implemented, see messages in the "Urgent Market Message" menu item. 
+25-Nov-2023 UMM Implemented
+NordPools API.
+iCheck out "Urgent Market Message" menu item. 

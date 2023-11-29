@@ -1,0 +1,3 @@
+29-Nov-2023 Ringhals block 4
+Failure, Duration unknown.
+Unavailable capacity 1130 MW.

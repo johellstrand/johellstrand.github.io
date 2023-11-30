@@ -1,0 +1,3 @@
+30-Nov-2023 Ringhals block 4
+Failure, Reactor scram due to valve failure.
+Restart delayed until Saturday. Unavailable capacity 1130 MW.

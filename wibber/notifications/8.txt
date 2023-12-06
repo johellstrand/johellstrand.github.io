@@ -1,0 +1,4 @@
+06-Dec-2023 Ringhals block 4
+Power reduction on generator 41 due to repair of leakage.
+Available Capacity 565MW out of 1130MW.
+.

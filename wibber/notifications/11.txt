@@ -1,0 +1,3 @@
+29-Feb-2024 Forsmark Block 2
+Leakage from control rod.
+Available Capacity 0MW out of 1121MW.

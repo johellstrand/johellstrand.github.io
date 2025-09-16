@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Power Price Watch — User Manual</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:#121a2b; --muted:#8aa0b5; --text:#e8f0ff; --accent:#3ddc97;
+      --warn:#ffb703; --danger:#ef476f; --ok:#06d6a0; --link:#89c2ff; --chip:#1c253a;
+    }
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji"}
+    a{color:var(--link)}
+    header{position:sticky;top:0;background:linear-gradient(180deg,#0b1220 70%,transparent);backdrop-filter:saturate(150%) blur(6px);z-index:2}
+    .wrap{max-width:920px;margin:0 auto;padding:24px}
+    h1{font-size:clamp(1.6rem,2.6vw,2.2rem);margin:8px 0 6px}
+    h2{font-size:1.4rem;margin:28px 0 10px}
+    h3{font-size:1.1rem;margin:18px 0 6px;color:#cfe0ff}
+    p,li{color:#d7e3f7}
+    .card{background:var(--card);border:1px solid #1d2740;border-radius:14px;padding:18px;margin:14px 0}
+    .grid{display:grid;gap:16px}
+    @media (min-width:880px){.grid.cols-2{grid-template-columns:1fr 1fr}}
+    code,kbd{background:var(--chip);border:1px solid #23304d;border-radius:8px;padding:2px 6px;font-family:ui-monospace, Menlo, Consolas, monospace}
+    .pill{display:inline-flex;align-items:center;gap:.4rem;padding:.25rem .6rem;border-radius:999px;background:var(--chip);border:1px solid #26314d;font-size:.85rem;color:#cfe0ff}
+    .pill .dot{width:.6rem;height:.6rem;border-radius:50%}
+    .ok{background:var(--ok)} .warn{background:var(--warn)} .danger{background:var(--danger)}
+    .toc ol{margin:0;padding-left:1.1rem}
+    .muted{color:var(--muted)}
+    footer{opacity:.85}
+    .table{width:100%;border-collapse:collapse}
+    .table th,.table td{border:1px solid #25304a;padding:10px 12px;text-align:left}
+    .table th{background:#121a2b;color:#cfe0ff}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Power Price Watch — User Manual</h1>
+      <p class="muted">Version 1.0 • For the Power Price Watch app. This document explains features exposed in the UI code you’re running.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card toc" id="toc">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#requirements">Requirements & Data</a></li>
+        <li><a href="#get-started">Getting Started</a></li>
+        <li><a href="#navigation">Navigation & Screens</a></li>
+        <li><a href="#premium">Premium Access & Billing</a></li>
+        <li><a href="#settings">Settings & Actions</a></li>
+        <li><a href="#widgets">Widgets</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+        <li><a href="#privacy">Privacy & Policies</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#glossary">Glossary</a></li>
+        <li><a href="#changelog">Changelog</a></li>
+      </ol>
+    </section>
+
+    <section class="card" id="overview">
+      <h2>1. Overview</h2>
+      <p><strong>Power Price Watch</strong> helps you track electricity spot prices, visualize historical trends, review your consumption, and optimize when you use energy. Most analytic features are available with <em>Premium</em>, and a dedicated <em>Premium</em> screen lets you subscribe or restore purchases.</p>
+      <div class="grid cols-2">
+        <div>
+          <h3>Key Capabilities</h3>
+          <ul>
+            <li>Live price tile with current time window, next-price arrow (↑/↓/→), and a colored gauge.</li>
+            <li>Historical price mini-chart using step interpolation for quick trend glances.</li>
+            <li>Consumption view with YTD summary (kWh).</li>
+            <li>Optimization tools to plan usage when prices are favorable.</li>
+            <li>Year-over-year (YOY) comparisons.</li>
+            <li>Miscellaneous tools and utilities.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Interface Basics</h3>
+          <ul>
+            <li>Tab-based layout with a <strong>List</strong> of destinations. Locked items show a <span class="pill"><span class="dot danger"></span> Premium</span> pill.</li>
+            <li>Context menus for actions such as <em>Refresh</em>, <em>Factory Reset</em>, and toggles.</li>
+            <li>In-app purchase UI for subscribing, restoring, and viewing policies.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="muted">If the app shows “<em>Waiting for Session Information from companion iOS APP</em>”, open the companion app on your iPhone to establish a session first.</p>
+    </section>
+
+    <section class="card" id="requirements">
+      <h2>2. Requirements & Data</h2>
+      <ul>
+        <li><strong>Session data</strong>: The app expects session information from a companion iOS app before certain features become available.</li>
+        <li><strong>Spot prices</strong>: Features like <em>Price</em>, <em>Historic Price</em>, and <em>Optimize</em> require spot price data to be present.</li>
+        <li><strong>Consumption</strong>: The <em>Consumption</em> and <em>YOY</em> tabs require consumption data.</li>
+      </ul>
+      <p>Some destinations may appear dimmed if their required data is missing; you can still open them to learn what’s needed.</p>
+    </section>
+
+    <section class="card" id="get-started">
+      <h2>3. Getting Started</h2>
+      <ol>
+        <li>Install and open <strong>Power Price Watch</strong>.</li>
+        <li>Launch the <strong>companion iOS app</strong> to provide session information when prompted.</li>
+        <li>On first run, the app may show a <em>Refreshing…</em> indicator while it fetches data.</li>
+        <li>Use the top-right <strong>gear</strong> icon to access quick actions (Refresh, Reset, etc.).</li>
+        <li>Explore the destinations in the list; locked entries route to the <em>Premium</em> screen.</li>
+      </ol>
+    </section>
+
+    <section class="card" id="navigation">
+      <h2>4. Navigation & Screens</h2>
+
+      <h3 id="price">4.1 Price (Live Spot Price)</h3>
+      <ul>
+        <li><strong>What you see:</strong> The current price time window (e.g., <em>13:00–14:00</em>) and a next-price indicator: ↑ (rising), ↓ (falling), or → (unchanged).</li>
+        <li><strong>Gauge:</strong> Circular gauge compares current price to today’s min/max. Labels show <em>min</em> and <em>max</em>; the current value is color-mapped along a green→yellow→red gradient.</li>
+        <li><strong>Tip:</strong> If the gauge is red and an upcoming arrow is ↓, consider shifting flexible loads (EV charging, heating, laundry) to the next, cheaper window.</li>
+      </ul>
+
+      <h3 id="historic">4.2 Historic Price</h3>
+      <ul>
+        <li>Mini chart of historical prices using a <em>step-end</em> line. Axes are hidden for a clean glance view.</li>
+        <li>Use this to understand trend context (e.g., sustained highs vs. typical ranges).</li>
+      </ul>
+
+      <h3 id="consumption">4.3 Consumption</h3>
+      <ul>
+        <li>Displays <strong>YTD</strong> energy use. Values are summarized in kWh.</li>
+        <li>As more data is available, additional breakdowns may appear in the dedicated view.</li>
+      </ul>
+
+      <h3 id="optimize">4.4 Optimize</h3>
+      <ul>
+        <li>Tools and views for planning usage during favorable price periods.</li>
+        <li>Combine with the live arrow signal to schedule flexible tasks.</li>
+      </ul>
+
+      <h3 id="yoy">4.5 YOY (Year‑Over‑Year)</h3>
+      <ul>
+        <li>Compares current period vs. previous year(s) to reveal seasonal or behavioral shifts.</li>
+      </ul>
+
+      <h3 id="misc">4.6 Miscellaneous</h3>
+      <ul>
+        <li>Assorted utilities and settings surfaced by the app that don’t fit other tabs.</li>
+      </ul>
+
+      <h3 id="premium-access">4.7 Premium Access</h3>
+      <ul>
+        <li>Locked items route here. Subscribe to unlock <em>Price</em>, <em>Historic Price</em>, <em>Consumption</em>, <em>Optimize</em>, and <em>YOY</em>.</li>
+        <li>Use <strong>Restore Purchases</strong> if you’ve already subscribed on another device with the same Apple ID.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="premium">
+      <h2>5. Premium Access & Billing</h2>
+      <p>Power Price Watch uses Apple’s <strong>in‑app subscriptions</strong>. The app listens for your subscription status and unlocks features when you’re <em>Subscribed</em>, <em>In Grace Period</em>, or <em>In Billing Retry</em>.</p>
+      <table class="table">
+        <thead><tr><th>Status</th><th>What it means</th><th>Access</th></tr></thead>
+        <tbody>
+          <tr><td>Subscribed</td><td>Active, verified purchase.</td><td>✅ Full access</td></tr>
+          <tr><td>In Grace Period</td><td>Temporary issue (e.g., billing) but access is maintained.</td><td>✅ Full access</td></tr>
+          <tr><td>In Billing Retry</td><td>Apple is retrying the payment.</td><td>✅ Full access</td></tr>
+          <tr><td>Expired / Not Subscribed</td><td>No active entitlement.</td><td>🚫 Premium features locked</td></tr>
+        </tbody>
+      </table>
+      <h3>Managing Your Subscription</h3>
+      <ul>
+        <li>Open <strong>Premium</strong> from the destination list when a feature shows a lock.</li>
+        <li>Subscribe using the on‑screen options.</li>
+        <li>To re‑enable access on a new device, tap <strong>Restore Purchases</strong>.</li>
+        <li>Policies are available via in‑app links to <em>Terms of Service</em> and <em>Privacy Policy</em>.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="settings">
+      <h2>6. Settings & Actions</h2>
+      <p>Tap the <strong>gear</strong> icon in the top‑right to open the action sheet:</p>
+      <ul>
+        <li><strong>Refresh</strong> — Fetches the latest prices and data.</li>
+        <li><strong>Factory Reset</strong> — Clears app state and returns defaults (also re‑enables the overview tiles).</li>
+        <li><strong>Show/Hide Overview</strong> — Toggles the dashboard-style previews for unlocked destinations (Premium only).</li>
+        <li><strong>Reset Help Flags</strong> — Replays tutorial or guidance cues if the app provides them.</li>
+        <li><strong>Cancel</strong> — Closes the menu.</li>
+      </ul>
+      <p class="muted">After subscription status changes, the app updates internal settings and refreshes widgets automatically.</p>
+    </section>
+
+    <section class="card" id="widgets">
+      <h2>7. Widgets</h2>
+      <p>The app integrates with the system’s widget framework to surface quick‑glance information. When your Premium status changes or data updates, widgets are refreshed to keep information current.</p>
+    </section>
+
+    <section class="card" id="troubleshooting">
+      <h2>8. Troubleshooting</h2>
+      <h3>Common States</h3>
+      <ul>
+        <li><em>Waiting for Session Information from companion iOS APP</em> — Open the companion iOS app to initialize the session.</li>
+        <li><em>Refreshing…</em> — Data is updating. If it persists unusually long, use <strong>Refresh</strong> from the gear menu.</li>
+        <li><em>Error Message</em> Visible — Read the details. Use <strong>Refresh</strong>. If the issue persists, try <strong>Factory Reset</strong>.</li>
+      </ul>
+      <h3>Data Not Appearing</h3>
+      <ul>
+        <li>Ensure the companion app is installed and running for session hand‑off.</li>
+        <li>Verify network connectivity.</li>
+        <li>Confirm your subscription is active if features remain locked.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="privacy">
+      <h2>9. Privacy & Policies</h2>
+      <ul>
+        <li><a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener noreferrer">Apple Standard EULA (Terms of Service)</a></li>
+        <li><a href="https://johellstrand.github.io/powerpricewatch/privacy_policy.html" target="_blank" rel="noopener noreferrer">Power Price Watch — Privacy Policy</a></li>
+      </ul>
+    </section>
+
+    <section class="card" id="faq">
+      <h2>10. FAQ</h2>
+      <h3>Why are some destinations dimmed?</h3>
+      <p>The app shows all destinations at all times. Items that lack required data are dimmed, but you can still open them to see what’s needed.</p>
+      <h3>What do the arrows next to the time window mean?</h3>
+      <p>They indicate the direction of the upcoming price compared to the current one: ↑ rising, ↓ falling, → unchanged.</p>
+      <h3>How are the gauge colors determined?</h3>
+      <p>The gauge maps current price within today’s min–max range along a green→yellow→red gradient. The closer to red, the higher the current price relative to today.</p>
+      <h3>Can I use the app without Premium?</h3>
+      <p>You can browse the interface and Misc tools. Premium unlocks live price, history, consumption, optimization, and YOY views.</p>
+      <h3>How do I restore my subscription?</h3>
+      <p>Open <em>Premium</em> and select <strong>Restore Purchases</strong>.</p>
+    </section>
+
+    <section class="card" id="glossary">
+      <h2>11. Glossary</h2>
+      <ul>
+        <li><strong>Spot Price</strong> — Real‑time market price for electricity at a given hour.</li>
+        <li><strong>YOY</strong> — Year‑over‑Year; comparing a value to the same period in the prior year.</li>
+        <li><strong>YTD</strong> — Year‑to‑Date; cumulative value since January 1 of the current year.</li>
+        <li><strong>Restore Purchases</strong> — Apple flow to re‑apply prior in‑app purchases to your device.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="changelog">
+      <h2>12. Changelog</h2>
+      <ul>
+        <li><strong>1.0</strong> — Initial public manual aligned with the current UI code.</li>
+      </ul>
+    </section>
+
+    <footer class="wrap muted">
+      <p>© <span id="year"></span> Power Price Watch. All rights reserved.</p>
+    </footer>
+  </main>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

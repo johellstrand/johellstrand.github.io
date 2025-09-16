@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Power Price Watch — Track & Optimize Electricity Costs</title>
+<meta name="description" content="Track live electricity prices, monitor consumption, and optimize energy use with smart insights and premium analytics.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b1220;--fg:#e8f0ff;--muted:#9fb3c8;--card:#121a2b;--brand:#3ddc97;--accent:#89c2ff;--warn:#ffb703}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 Inter,system-ui,-apple-system,'Segoe UI',Roboto,Arial}
+a{color:var(--accent);text-decoration:none}
+.container{max-width:1024px;margin:0 auto;padding:24px}
+.nav{display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px}
+.logo{font-weight:800;letter-spacing:.2px}
+.btn{display:inline-flex;gap:.5rem;align-items:center;background:var(--brand);color:#042f2e;border-radius:999px;padding:10px 16px;font-weight:700}
+.hero{display:grid;gap:18px;padding:36px;border:1px solid #1d2740;background:linear-gradient(180deg,#0f1a2f,transparent);border-radius:18px}
+.hero h1{font-size:clamp(1.8rem,3.5vw,2.6rem);line-height:1.15;margin:0}
+.hero p{color:var(--muted);margin:.4rem 0 0}
+.grid{display:grid;gap:16px}
+@media(min-width:900px){.grid.cols-3{grid-template-columns:repeat(3,1fr)}}
+.card{background:var(--card);border:1px solid #1d2740;border-radius:14px;padding:16px}
+.kicker{display:inline-block;color:#0c322b;background:#a7f3d0;border:1px solid #99eacf;padding:2px 8px;border-radius:999px;font-size:.8rem;font-weight:700}
+.badge{display:inline-flex;align-items:center;gap:.35rem;background:#10233f;border:1px solid #23406c;border-radius:999px;padding:2px 8px;color:#cfe0ff;font-size:.82rem}
+.footer{color:var(--muted);text-align:center;margin:24px 0 10px}
+.small{font-size:.88rem;color:var(--muted)}
+/* Gallery */
+.gallery{margin-top:32px}
+.gallery h2{text-align:center;margin-bottom:12px}
+.gallery-track{display:flex;gap:16px;overflow-x:auto;padding-bottom:12px;scroll-snap-type:x mandatory}
+.gallery-track::-webkit-scrollbar{height:8px}
+.gallery-track::-webkit-scrollbar-thumb{background:#26314f;border-radius:4px}
+.phone {
+  flex: 0 0 260px;     /* width of each item in carousel */
+  aspect-ratio: 5 / 4; /* matches 502:410 ratio */
+  border-radius: 16px;
+  border: 1px solid #26314f;
+  background: #0c1326;
+  overflow: hidden;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.phone img.screen {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;  /* avoids stretching watch screenshots */
+  background: black;    /* adds bezel effect around the watch screen */
+}.caption{font-size:.8rem;color:var(--muted);margin-top:6px;text-align:center}
+</style>
+</head>
+<body>
+  <div class="container">
+    <nav class="nav">
+      <div class="logo">⚡ Power Price Watch</div>
+      <a class="btn" href="#download">Get the App</a>
+    </nav>
+
+    <section class="hero">
+      <span class="kicker">Save on electricity</span>
+      <h1>Track live prices. Monitor consumption.<br>Optimize your energy use.</h1>
+      <p>Smart insights, beautiful charts, and premium analytics help you shift usage to cheaper hours and lower your bill.</p>
+      <div>
+        <span class="badge">Live spot price</span>
+        <span class="badge">Historic trends</span>
+        <span class="badge">Consumption (kWh)</span>
+        <span class="badge">YOY compare</span>
+        <span class="badge">Widgets</span>
+      </div>
+
+    </section>
+
+    <section class="gallery">
+      <h2>App Screenshots</h2>
+      <div class="gallery-track">
+        <div class="phone"><img class="screen" src="images/screenshot1_placeholder.png" alt="Live Price"><div class="caption">Live Price</div></div>
+        <div class="phone"><img class="screen" src="images/screenshot2_placeholder.png" alt="Historic Graph"><div class="caption">Historic Graph</div></div>
+        <div class="phone"><img class="screen" src="images/screenshot3_placeholder.png" alt="Consumption"><div class="caption">Consumption</div></div>
+        <div class="phone"><img class="screen" src="images/screenshot4_placeholder.png" alt="Optimize"><div class="caption">Optimize</div></div>
+        <div class="phone"><img class="screen" src="images/screenshot5_placeholder.png" alt="YOY Compare"><div class="caption">YOY Compare</div></div>
+      </div>
+    </section>
+
+    <section class="grid cols-3" id="features" style="margin-top:18px">
+      <div class="card">
+        <h3>Live Price</h3>
+        <p class="small">See the current hour’s price, a next-hour arrow (↑ ↓ →), and a min–max gauge so you know when to shift usage.</p>
+      </div>
+      <div class="card">
+        <h3>Historic & YOY</h3>
+        <p class="small">Glanceable step-line charts and year-over-year comparisons reveal trends and seasonality.</p>
+      </div>
+      <div class="card">
+        <h3>Consumption</h3>
+        <p class="small">Track year-to-date kWh usage and spot savings opportunities with premium analytics.</p>
+      </div>
+    </section>
+
+    <section id="download" class="card" style="margin-top:16px;text-align:center">
+      <h3>Get Power Price Watch</h3>
+      <p class="small">Available on iPhone. Restore purchases anytime.</p>
+      <p><a class="btn" href="https://apps.apple.com/" target="_blank" rel="noopener">Download on the App Store</a></p>
+    </section>
+
+    <p class="footer">© <span id="year"></span> Power Price Watch • <a href="https://johellstrand.github.io/powerpricewatch/privacy_policy.html" target="_blank" rel="noopener">Privacy</a> • <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener">Terms</a></p>
+  </div>
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>

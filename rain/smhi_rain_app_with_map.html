@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SMHI Rain Viewer with Map</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+  --bg: #f7f8fb;
+  --card: #ffffff;
+  --text: #172033;
+  --muted: #61708a;
+  --border: #d9dfeb;
+  --accent: #1f77d0;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+main {
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 24px;
+}
+h1 { margin: 0 0 8px; }
+p { color: var(--muted); }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 8px 28px rgba(23,32,51,.06);
+  margin-top: 16px;
+}
+.controls {
+  display: grid;
+  grid-template-columns: 1fr minmax(240px, 340px) auto;
+  gap: 12px;
+  align-items: end;
+}
+label {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+input, select, button {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font: inherit;
+  background: white;
+}
+button {
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-weight: 650;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+.stat {
+  background: #f4f7fc;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+}
+.stat b {
+  display: block;
+  font-size: 22px;
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#map {
+  height: 460px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+}
+.chartWrap {
+  height: 440px;
+}
+.status {
+  min-height: 24px;
+  color: var(--muted);
+}
+.error { color: #b00020; }
+.small { font-size: 13px; }
+.mapPopup button {
+  margin-top: 8px;
+  padding: 8px 10px;
+}
+@media (max-width: 800px) {
+  .controls { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #map { height: 360px; }
+}
+</style>
+</head>
+
+<body>
+<main>
+  <h1>SMHI Rain Viewer</h1>
+  <p>Daily precipitation from SMHI open data, parameter 5. Search, pick from the dropdown, or choose a station on the map.</p>
+
+  <section class="card">
+    <div class="controls">
+      <div>
+        <label for="stationSearch">Search station</label>
+        <input id="stationSearch" placeholder="Type station name or station id, e.g. Aspa or 87600">
+      </div>
+
+      <div>
+        <label for="stationSelect">Station</label>
+        <select id="stationSelect" disabled>
+          <option>Loading stations…</option>
+        </select>
+      </div>
+
+      <button id="loadBtn" disabled>Load rain</button>
+    </div>
+
+    <p id="status" class="status"></p>
+  </section>
+
+  <section class="card">
+    <h2>Map view</h2>
+    <div id="map"></div>
+    <p class="small">Click a marker to select that station. Blue markers are active stations; gray markers are inactive stations.</p>
+  </section>
+
+  <section class="stats" aria-live="polite">
+    <div class="stat"><span>Selected station</span><b id="stationName">–</b></div>
+    <div class="stat"><span>Total rain</span><b id="totalRain">–</b></div>
+    <div class="stat"><span>Rainiest day</span><b id="maxRain">–</b></div>
+    <div class="stat"><span>Observations</span><b id="obsCount">–</b></div>
+  </section>
+
+  <section class="card">
+    <div class="chartWrap">
+      <canvas id="rainChart"></canvas>
+    </div>
+    <p class="small">The chart shows the latest available months returned by SMHI for the selected station.</p>
+  </section>
+</main>
+
+<script>
+const API_ROOT = "https://opendata-download-metobs.smhi.se/api/version/1.0";
+const PARAMETER = "5";
+const PERIOD = "latest-months";
+
+const stationSearch = document.getElementById("stationSearch");
+const stationSelect = document.getElementById("stationSelect");
+const loadBtn = document.getElementById("loadBtn");
+const statusEl = document.getElementById("status");
+
+const stationNameEl = document.getElementById("stationName");
+const totalRainEl = document.getElementById("totalRain");
+const maxRainEl = document.getElementById("maxRain");
+const obsCountEl = document.getElementById("obsCount");
+
+let allStations = [];
+let filteredStations = [];
+let chart;
+let map;
+let markerLayer;
+let selectedMarker;
+
+const activeIcon = L.divIcon({
+  className: "",
+  html: '<div style="width:14px;height:14px;border-radius:50%;background:#1f77d0;border:2px solid white;box-shadow:0 0 0 1px rgba(0,0,0,.25)"></div>',
+  iconSize: [18, 18],
+  iconAnchor: [9, 9]
+});
+
+const inactiveIcon = L.divIcon({
+  className: "",
+  html: '<div style="width:12px;height:12px;border-radius:50%;background:#8b95a7;border:2px solid white;box-shadow:0 0 0 1px rgba(0,0,0,.25)"></div>',
+  iconSize: [16, 16],
+  iconAnchor: [8, 8]
+});
+
+const selectedIcon = L.divIcon({
+  className: "",
+  html: '<div style="width:22px;height:22px;border-radius:50%;background:#ff8a00;border:3px solid white;box-shadow:0 0 0 2px rgba(0,0,0,.35)"></div>',
+  iconSize: [26, 26],
+  iconAnchor: [13, 13]
+});
+
+function stationLabel(station) {
+  const name = station.name || "Unnamed station";
+  const id = stationId(station);
+  const active = station.active === false ? "inactive" : "active";
+  return `${name} (${id}) · ${active}`;
+}
+
+function stationId(station) {
+  return String(station.key || station.id || station.station);
+}
+
+function stationLat(station) {
+  return Number(station.latitude ?? station.lat);
+}
+
+function stationLon(station) {
+  return Number(station.longitude ?? station.lon);
+}
+
+function setStatus(message, isError = false) {
+  statusEl.textContent = message;
+  statusEl.className = isError ? "status error" : "status";
+}
+
+async function fetchJson(url) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`SMHI returned ${response.status} for ${url}`);
+  }
+  return response.json();
+}
+
+function initMap() {
+  map = L.map("map").setView([62.0, 15.0], 5);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 18,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  markerLayer = L.layerGroup().addTo(map);
+}
+
+async function loadStations() {
+  setStatus("Loading precipitation stations from SMHI…");
+
+  const metadataUrl = `${API_ROOT}/parameter/${PARAMETER}.json`;
+  const data = await fetchJson(metadataUrl);
+
+  allStations = (data.station || [])
+    .filter(s => stationId(s) && s.name)
+    .sort((a, b) => {
+      const an = (a.name || "").localeCompare(b.name || "", "sv");
+      return an || Number(stationId(a)) - Number(stationId(b));
+    });
+
+  if (!allStations.length) {
+    throw new Error("No precipitation stations were found in the SMHI metadata response.");
+  }
+
+  renderStationOptions(allStations);
+  renderMapMarkers(allStations);
+
+  const savedStation = localStorage.getItem("smhi-rain-station");
+  if (savedStation && allStations.some(s => stationId(s) === savedStation)) {
+    stationSelect.value = savedStation;
+  } else if (allStations.some(s => stationId(s) === "87600")) {
+    stationSelect.value = "87600";
+  }
+
+  stationSelect.disabled = false;
+  loadBtn.disabled = false;
+  setStatus(`${allStations.length} stations loaded.`);
+  await loadRain(true);
+}
+
+function renderStationOptions(stations) {
+  filteredStations = stations;
+  stationSelect.innerHTML = "";
+
+  for (const station of stations) {
+    const option = document.createElement("option");
+    option.value = stationId(station);
+    option.textContent = stationLabel(station);
+    stationSelect.appendChild(option);
+  }
+}
+
+function renderMapMarkers(stations) {
+  markerLayer.clearLayers();
+
+  const plotted = stations.filter(s => Number.isFinite(stationLat(s)) && Number.isFinite(stationLon(s)));
+
+  for (const station of plotted) {
+    const marker = L.marker([stationLat(station), stationLon(station)], {
+      icon: station.active === false ? inactiveIcon : activeIcon
+    });
+
+    marker.stationId = stationId(station);
+    marker.baseIcon = station.active === false ? inactiveIcon : activeIcon;
+
+    marker.bindPopup(`
+      <div class="mapPopup">
+        <b>${station.name}</b><br>
+        Station ${stationId(station)}<br>
+        ${station.active === false ? "Inactive" : "Active"}<br>
+        <button onclick="selectStationFromMap('${stationId(station)}')">Select station</button>
+      </div>
+    `);
+
+    marker.addTo(markerLayer);
+  }
+
+  if (plotted.length) {
+    map.fitBounds(L.latLngBounds(plotted.map(s => [stationLat(s), stationLon(s)])), { padding: [20, 20] });
+  }
+}
+
+window.selectStationFromMap = async function(id) {
+  stationSearch.value = "";
+  renderStationOptions(allStations);
+  stationSelect.value = id;
+  await loadRain(true);
+};
+
+function highlightSelectedMarker(id, panToMarker = false) {
+  markerLayer.eachLayer(marker => {
+    if (marker.stationId === id) {
+      marker.setIcon(selectedIcon);
+      selectedMarker = marker;
+      if (panToMarker) {
+        map.setView(marker.getLatLng(), Math.max(map.getZoom(), 8));
+        marker.openPopup();
+      }
+    } else {
+      marker.setIcon(marker.baseIcon);
+    }
+  });
+}
+
+function filterStations() {
+  const query = stationSearch.value.trim().toLowerCase();
+  const current = stationSelect.value;
+
+  const matches = !query
+    ? allStations
+    : allStations.filter(s => {
+        const text = `${s.name || ""} ${stationId(s)} ${s.owner || ""}`.toLowerCase();
+        return text.includes(query);
+      });
+
+  renderStationOptions(matches.slice(0, 500));
+  renderMapMarkers(matches.slice(0, 500));
+
+  if (matches.some(s => stationId(s) === current)) {
+    stationSelect.value = current;
+    highlightSelectedMarker(current, false);
+  }
+
+  setStatus(`${matches.length} matching stations${matches.length > 500 ? " — showing first 500 on dropdown and map" : ""}.`);
+}
+
+function parseObservationDate(item) {
+  if (item.date) return item.date;
+  if (item.from) return new Date(item.from).toISOString().slice(0, 10);
+  return "";
+}
+
+async function loadRain(panToMarker = false) {
+  const id = stationSelect.value;
+  if (!id) return;
+
+  const selected = allStations.find(s => stationId(s) === id);
+  localStorage.setItem("smhi-rain-station", id);
+
+  highlightSelectedMarker(id, panToMarker);
+
+  setStatus(`Loading rain data for ${selected ? selected.name : id}…`);
+  loadBtn.disabled = true;
+
+  try {
+    const url = `${API_ROOT}/parameter/${PARAMETER}/station/${id}/period/${PERIOD}/data.json`;
+    const data = await fetchJson(url);
+
+    const observations = (data.value || [])
+      .map(v => ({
+        date: parseObservationDate(v),
+        rain: Number(String(v.value).replace(",", ".")),
+        quality: v.quality || ""
+      }))
+      .filter(v => v.date && Number.isFinite(v.rain))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    updateStats(selected, observations);
+    drawChart(observations);
+
+    setStatus(`Loaded ${observations.length} observations for ${selected ? selected.name : id}.`);
+  } catch (err) {
+    console.error(err);
+    setStatus(err.message, true);
+  } finally {
+    loadBtn.disabled = false;
+  }
+}
+
+function updateStats(station, observations) {
+  stationNameEl.textContent = station ? `${station.name} (${stationId(station)})` : "–";
+  obsCountEl.textContent = observations.length;
+
+  if (!observations.length) {
+    totalRainEl.textContent = "–";
+    maxRainEl.textContent = "–";
+    return;
+  }
+
+  const total = observations.reduce((sum, item) => sum + item.rain, 0);
+  const max = observations.reduce((best, item) => item.rain > best.rain ? item : best, observations[0]);
+
+  totalRainEl.textContent = `${total.toFixed(1)} mm`;
+  maxRainEl.textContent = `${max.rain.toFixed(1)} mm`;
+}
+
+function drawChart(observations) {
+  const ctx = document.getElementById("rainChart");
+
+  const labels = observations.map(item => item.date);
+  const values = observations.map(item => item.rain);
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Daily precipitation (mm)",
+        data: values,
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: "index",
+        intersect: false
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: context => `${context.parsed.y.toFixed(1)} mm`
+          }
+        },
+        legend: {
+          display: true
+        }
+      },
+      scales: {
+        x: {
+          ticks: { maxTicksLimit: 12 },
+          title: { display: true, text: "Date" }
+        },
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: "Precipitation, mm" }
+        }
+      }
+    }
+  });
+}
+
+initMap();
+
+stationSearch.addEventListener("input", filterStations);
+stationSelect.addEventListener("change", () => loadRain(true));
+loadBtn.addEventListener("click", () => loadRain(true));
+
+loadStations().catch(err => {
+  console.error(err);
+  setStatus(err.message, true);
+  stationSelect.innerHTML = "<option>Could not load stations</option>";
+});
+</script>
+</body>
+</html>

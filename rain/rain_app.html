@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rain at Aspa D | SMHI</title>
+  <style>
+    :root {
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #102033;
+      background: linear-gradient(135deg, #eaf6ff, #f7fbff 55%, #eef8f2);
+    }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+    main { width: min(1100px, 100%); }
+    .card {
+      background: rgba(255,255,255,.86);
+      border: 1px solid rgba(100,130,160,.18);
+      border-radius: 28px;
+      box-shadow: 0 24px 70px rgba(20,60,100,.14);
+      padding: 28px;
+      backdrop-filter: blur(12px);
+    }
+    header { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+    h1 { margin: 0 0 8px; font-size: clamp(2rem, 4vw, 4rem); letter-spacing: -.05em; }
+    .sub { margin: 0; color: #5d7086; font-size: 1rem; }
+    .stats { display: grid; grid-template-columns: repeat(3, minmax(130px, 1fr)); gap: 12px; margin: 26px 0; }
+    .stat { padding: 16px; border-radius: 18px; background: #f3f8fc; border: 1px solid #e3edf5; }
+    .label { color: #65798e; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
+    .value { margin-top: 6px; font-size: 1.7rem; font-weight: 750; }
+    .unit { font-size: .95rem; font-weight: 600; color: #60758b; }
+    .chart-wrap { height: 420px; position: relative; border-radius: 22px; overflow: hidden; background: #fff; border: 1px solid #e3edf5; }
+    canvas { width: 100%; height: 100%; display: block; }
+    .footer { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 16px; color: #687c92; font-size: .9rem; }
+    button {
+      appearance: none; border: 0; border-radius: 999px; padding: 11px 16px;
+      background: #0b6bcb; color: white; font-weight: 700; cursor: pointer;
+      box-shadow: 0 8px 22px rgba(11,107,203,.25);
+    }
+    button:hover { background: #075aa9; }
+    .error { color: #a32323; background: #fff0f0; padding: 12px 14px; border-radius: 14px; margin-top: 16px; display: none; }
+    @media (max-width: 720px) { .stats { grid-template-columns: 1fr; } .card { padding: 18px; } .chart-wrap { height: 340px; } }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <header>
+      <div>
+        <h1>Rain at <span id="station">Aspa D</span></h1>
+        <p class="sub" id="description">Daily precipitation from SMHI open data.</p>
+      </div>
+      <button id="refresh">Refresh data</button>
+    </header>
+
+    <section class="stats" aria-label="Rain statistics">
+      <div class="stat"><div class="label">Latest day</div><div class="value" id="latest">–</div></div>
+      <div class="stat"><div class="label">Last 30 days</div><div class="value" id="last30">–</div></div>
+      <div class="stat"><div class="label">Wettest day</div><div class="value" id="wettest">–</div></div>
+    </section>
+
+    <div class="chart-wrap">
+      <canvas id="chart" aria-label="Daily rain chart"></canvas>
+    </div>
+
+    <p class="error" id="error"></p>
+    <div class="footer">
+      <span id="updated">Loading…</span>
+      <span>Source: SMHI parameter 5, station 87600, latest months</span>
+    </div>
+  </main>
+
+  <script>
+    const DATA_URL = "https://opendata-download-metobs.smhi.se/api/version/1.0/parameter/5/station/87600/period/latest-months/data.json";
+    const canvas = document.getElementById("chart");
+    const ctx = canvas.getContext("2d");
+
+    function mm(value) { return `${Number(value).toFixed(1)} <span class="unit">mm</span>`; }
+    function formatDate(dateString) { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(dateString)); }
+    function sum(values) { return values.reduce((total, item) => total + item.rain, 0); }
+
+    async function loadRain() {
+      document.getElementById("error").style.display = "none";
+      const response = await fetch(DATA_URL, { cache: "no-store" });
+      if (!response.ok) throw new Error(`SMHI returned ${response.status}`);
+      const json = await response.json();
+
+      const data = json.value.map(d => ({ date: d.ref, rain: Number(d.value), quality: d.quality }));
+      const latest = data[data.length - 1];
+      const last30 = data.slice(-30);
+      const wettest = data.reduce((max, item) => item.rain > max.rain ? item : max, data[0]);
+
+      document.getElementById("station").textContent = json.station.name;
+      document.getElementById("description").textContent = `${json.parameter.name}: ${json.parameter.summary} (${json.parameter.unit}).`;
+      document.getElementById("latest").innerHTML = `${mm(latest.rain)}<br><span class="unit">${latest.date}</span>`;
+      document.getElementById("last30").innerHTML = mm(sum(last30));
+      document.getElementById("wettest").innerHTML = `${mm(wettest.rain)}<br><span class="unit">${wettest.date}</span>`;
+      document.getElementById("updated").textContent = `Updated ${new Date(json.updated).toLocaleString()}`;
+      drawChart(data.slice(-90));
+    }
+
+    function drawChart(data) {
+      const ratio = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * ratio;
+      canvas.height = rect.height * ratio;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.clearRect(0, 0, rect.width, rect.height);
+
+      const pad = { top: 28, right: 28, bottom: 48, left: 54 };
+      const w = rect.width - pad.left - pad.right;
+      const h = rect.height - pad.top - pad.bottom;
+      const maxRain = Math.max(5, Math.ceil(Math.max(...data.map(d => d.rain))));
+      const barGap = 2;
+      const barW = Math.max(2, w / data.length - barGap);
+
+      ctx.font = "12px system-ui, sans-serif";
+      ctx.strokeStyle = "#e5eef6";
+      ctx.fillStyle = "#6b7f94";
+      ctx.lineWidth = 1;
+
+      for (let i = 0; i <= 4; i++) {
+        const value = maxRain * i / 4;
+        const y = pad.top + h - (value / maxRain) * h;
+        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + w, y); ctx.stroke();
+        ctx.fillText(`${value.toFixed(0)} mm`, 10, y + 4);
+      }
+
+      data.forEach((d, i) => {
+        const x = pad.left + i * (w / data.length);
+        const barH = (d.rain / maxRain) * h;
+        const y = pad.top + h - barH;
+        const gradient = ctx.createLinearGradient(0, y, 0, pad.top + h);
+        gradient.addColorStop(0, "#1687e8");
+        gradient.addColorStop(1, "#a9dcff");
+        ctx.fillStyle = d.rain === 0 ? "#e7f2fb" : gradient;
+        ctx.fillRect(x, y, barW, Math.max(1, barH));
+      });
+
+      ctx.fillStyle = "#6b7f94";
+      const ticks = [0, Math.floor(data.length / 2), data.length - 1];
+      ticks.forEach(i => {
+        const x = pad.left + i * (w / data.length);
+        ctx.fillText(formatDate(data[i].date), x, rect.height - 18);
+      });
+    }
+
+    document.getElementById("refresh").addEventListener("click", () => loadRain().catch(showError));
+    window.addEventListener("resize", () => loadRain().catch(showError));
+    function showError(error) {
+      const box = document.getElementById("error");
+      box.textContent = `Could not load rain data: ${error.message}. If opening from a local file is blocked by your browser, serve it with a local web server.`;
+      box.style.display = "block";
+    }
+    loadRain().catch(showError);
+  </script>
+</body>
+</html>
